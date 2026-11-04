@@ -2,13 +2,19 @@
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
 
-// @desc    Create a notification
-// @route   POST /api/notifications
-// @access  Admin
+// @desc Create a notification
+// @route POST /api/notifications
+// @access Admin
 export const createNotification = async (req, res) => {
   try {
-    const { title, message, type, link, recipientId, sendToAll } =
-      req.body;
+    const {
+      title,
+      message,
+      type,
+      link,
+      recipientId,
+      sendToAll,
+    } = req.body;
 
     if (!title || !message) {
       return res.status(400).json({
@@ -17,31 +23,21 @@ export const createNotification = async (req, res) => {
       });
     }
 
-    let notifications;
+    let notification;
 
-    if (sendToAll === true) {
-      const students = await User.find({
-        role: "student",
-        isActive: true,
-      }).select("_id");
+    const isGlobal =
+      sendToAll === true || sendToAll === "true";
 
-      if (!students.length) {
-        return res.status(404).json({
-          success: false,
-          message: "No active students found",
-        });
-      }
-
-      notifications = await Notification.insertMany(
-        students.map((student) => ({
-          recipient: student._id,
-          title,
-          message,
-          type,
-          link,
-          createdBy: req.user._id,
-        }))
-      );
+    if (isGlobal) {
+      // Store one announcement for all current and future students
+      notification = await Notification.create({
+        title,
+        message,
+        type,
+        link,
+        isGlobal: true,
+        createdBy: req.user._id,
+      });
     } else {
       if (!recipientId) {
         return res.status(400).json({
@@ -62,24 +58,24 @@ export const createNotification = async (req, res) => {
         });
       }
 
-      const notification = await Notification.create({
+      notification = await Notification.create({
         recipient: recipientId,
         title,
         message,
         type,
         link,
+        isGlobal: false,
         createdBy: req.user._id,
       });
-
-      notifications = [notification];
     }
 
     return res.status(201).json({
       success: true,
       message: "Notification created successfully",
-      count: notifications.length,
-      notifications,
+      count: 1,
+      notification,
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -89,20 +85,48 @@ export const createNotification = async (req, res) => {
 };
 
 
-// @desc    Get logged-in user's notifications
-// @route   GET /api/notifications
-// @access  Private
+// @desc Get logged-in user's notifications
+// @route GET /api/notifications
+// @access Private
 export const getMyNotifications = async (req, res) => {
   try {
+    const userId = req.user._id;
+
     const notifications = await Notification.find({
-      recipient: req.user._id,
+      $and: [
+        {
+          $or: [
+            { isGlobal: true },
+            { recipient: userId },
+          ],
+        },
+        {
+          deletedBy: { $ne: userId },
+        },
+      ],
     }).sort({ createdAt: -1 });
+
+    // Attach the current user's read status to each notification
+    const formattedNotifications = notifications.map(
+      (notification) => {
+        const item = notification.toObject();
+
+        if (item.isGlobal) {
+          item.isRead = item.readBy.some(
+            (id) => id.toString() === userId.toString()
+          );
+        }
+
+        return item;
+      }
+    );
 
     return res.status(200).json({
       success: true,
-      count: notifications.length,
-      notifications,
+      count: formattedNotifications.length,
+      notifications: formattedNotifications,
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -112,20 +136,33 @@ export const getMyNotifications = async (req, res) => {
 };
 
 
-// @desc    Get unread notification count
-// @route   GET /api/notifications/unread-count
-// @access  Private
+// @desc Get unread notification count
+// @route GET /api/notifications/unread-count
+// @access Private
 export const getUnreadCount = async (req, res) => {
   try {
+    const userId = req.user._id;
+
     const count = await Notification.countDocuments({
-      recipient: req.user._id,
-      isRead: false,
+      $or: [
+        {
+          isGlobal: true,
+          readBy: { $ne: userId },
+          deletedBy: { $ne: userId },
+        },
+        {
+          recipient: userId,
+          isRead: false,
+          isGlobal: false,
+        },
+      ],
     });
 
     return res.status(200).json({
       success: true,
       unreadCount: count,
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -135,22 +172,21 @@ export const getUnreadCount = async (req, res) => {
 };
 
 
-// @desc    Mark one notification as read
-// @route   PATCH /api/notifications/:id/read
-// @access  Private
+// @desc Mark one notification as read
+// @route PATCH /api/notifications/:id/read
+// @access Private
 export const markAsRead = async (req, res) => {
   try {
-    const notification = await Notification.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        recipient: req.user._id,
-      },
-      {
-        isRead: true,
-        readAt: new Date(),
-      },
-      { new: true }
-    );
+    const userId = req.user._id;
+
+    const notification = await Notification.findOne({
+      _id: req.params.id,
+      $or: [
+        { isGlobal: true },
+        { recipient: userId },
+      ],
+      deletedBy: { $ne: userId },
+    });
 
     if (!notification) {
       return res.status(404).json({
@@ -159,11 +195,24 @@ export const markAsRead = async (req, res) => {
       });
     }
 
+    if (notification.isGlobal) {
+      await Notification.updateOne(
+        { _id: notification._id },
+        {
+          $addToSet: { readBy: userId },
+        }
+      );
+    } else {
+      notification.isRead = true;
+      notification.readAt = new Date();
+      await notification.save();
+    }
+
     return res.status(200).json({
       success: true,
       message: "Notification marked as read",
-      notification,
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -173,19 +222,39 @@ export const markAsRead = async (req, res) => {
 };
 
 
-// @desc    Mark all notifications as read
-// @route   PATCH /api/notifications/read-all
-// @access  Private
+// @desc Mark all notifications as read
+// @route PATCH /api/notifications/read-all
+// @access Private
 export const markAllAsRead = async (req, res) => {
   try {
+    const userId = req.user._id;
+
+    // Mark personal notifications as read
     await Notification.updateMany(
       {
-        recipient: req.user._id,
+        recipient: userId,
+        isGlobal: false,
         isRead: false,
       },
       {
-        isRead: true,
-        readAt: new Date(),
+        $set: {
+          isRead: true,
+          readAt: new Date(),
+        },
+      }
+    );
+
+    // Mark global announcements as read for this student only
+    await Notification.updateMany(
+      {
+        isGlobal: true,
+        readBy: { $ne: userId },
+        deletedBy: { $ne: userId },
+      },
+      {
+        $addToSet: {
+          readBy: userId,
+        },
       }
     );
 
@@ -193,6 +262,7 @@ export const markAllAsRead = async (req, res) => {
       success: true,
       message: "All notifications marked as read",
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -202,14 +272,19 @@ export const markAllAsRead = async (req, res) => {
 };
 
 
-// @desc    Delete a notification
-// @route   DELETE /api/notifications/:id
-// @access  Private
+// @desc Delete a notification for the logged-in user
+// @route DELETE /api/notifications/:id
+// @access Private
 export const deleteNotification = async (req, res) => {
   try {
-    const notification = await Notification.findOneAndDelete({
+    const userId = req.user._id;
+
+    const notification = await Notification.findOne({
       _id: req.params.id,
-      recipient: req.user._id,
+      $or: [
+        { isGlobal: true },
+        { recipient: userId },
+      ],
     });
 
     if (!notification) {
@@ -219,10 +294,29 @@ export const deleteNotification = async (req, res) => {
       });
     }
 
+    if (notification.isGlobal) {
+      // Hide it only for this student
+      await Notification.updateOne(
+        { _id: notification._id },
+        {
+          $addToSet: {
+            deletedBy: userId,
+          },
+        }
+      );
+    } else {
+      // Personal notification can be deleted normally
+      await Notification.deleteOne({
+        _id: notification._id,
+        recipient: userId,
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: "Notification deleted successfully",
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,

@@ -35,6 +35,10 @@ const weekSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  isLocked: {
+  type: Boolean,
+  default: true,
+},
 
   description: {
     type: String,

@@ -6,39 +6,37 @@ const notificationSchema = new mongoose.Schema(
     recipient: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      default: null,
     },
 
     title: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 120,
     },
 
     message: {
       type: String,
       required: true,
-      trim: true,
-      maxlength: 1000,
     },
 
     type: {
       type: String,
-      enum: [
-        "announcement",
-        "assignment",
-        "course",
-        "system",
-      ],
-      default: "system",
+      default: "general",
     },
 
     link: {
       type: String,
-      default: "",
+      default: null,
     },
 
+    // True for announcements sent to every student
+    isGlobal: {
+      type: Boolean,
+      default: false,
+    },
+
+    // Personal notification read status
     isRead: {
       type: Boolean,
       default: false,
@@ -49,22 +47,28 @@ const notificationSchema = new mongoose.Schema(
       default: null,
     },
 
+    // Students who have read a global announcement
+    readBy: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    }],
+
+    // Students who have individually deleted a global announcement
+    deletedBy: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    }],
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      default: null,
+      required: true,
     },
   },
   {
     timestamps: true,
   }
 );
-
-// Efficiently retrieve a user's newest notifications.
-notificationSchema.index({ recipient: 1, createdAt: -1 });
-
-// Efficiently count unread notifications.
-notificationSchema.index({ recipient: 1, isRead: 1 });
 
 const Notification = mongoose.model(
   "Notification",

@@ -264,3 +264,34 @@ export const uploadProfileImage = async (req, res) => {
     });
   }
 };
+
+// GET REAL REGISTERED STUDENTS FOR THE COMMUNITY
+export const getCommunityUsers = async (req, res) => {
+  try {
+    const users = await User.find({
+      role: "student",
+      isActive: true,
+    })
+      .select("firstName lastName profileImage bio learningGoal createdAt")
+      .sort({ createdAt: -1 })
+      .limit(12)
+      .lean();
+
+    const totalStudents = await User.countDocuments({
+      role: "student",
+      isActive: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      totalStudents,
+      users,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Could not retrieve community members",
+      error: error.message,
+    });
+  }
+};

@@ -10,6 +10,7 @@ import courseRoutes from "./routes/courseRoutes.js";
 import assignmentRoutes from "./routes/assignmentRoutes.js";
 import submissionRoutes from "./routes/submissionRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import postRoutes from "./routes/postRoutes.js";
 
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
@@ -52,7 +53,7 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/notifications", notificationRoutes);
-
+app.use("/api/posts", postRoutes);
 const startServer = async () => {
   try {
     await connectDB();

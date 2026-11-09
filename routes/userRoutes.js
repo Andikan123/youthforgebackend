@@ -7,6 +7,7 @@ import {
   getMyProfile,
   updateMe,
   uploadProfileImage,
+  getCommunityUsers,
 } from "../controllers/userControllers.js";
 
 import protect from "../middleware/authMiddleware.js";
@@ -17,6 +18,8 @@ const router = express.Router();
 // Public routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);
+// Public community route
+router.get("/community", getCommunityUsers);
 
 // Protected routes
 router.get("/me", protect, getMyProfile);

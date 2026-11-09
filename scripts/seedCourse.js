@@ -14,7 +14,7 @@ const weeks = [
     title: "Introduction to HTML",
     description:
       "Understand how websites work and learn how to create your first HTML document.",
-       isLocked: false,
+      
     topics: [
       "How the internet and websites work",
       "Introduction to HTML",
@@ -22,6 +22,7 @@ const weeks = [
       "Headings and paragraphs",
       "HTML elements and attributes",
     ],
+     isLocked: false,
     material:
       "Learn the basic structure of HTML documents and how to create meaningful webpage content.",
     resources: [
@@ -36,7 +37,7 @@ const weeks = [
     title: "HTML Elements and Forms",
     description:
       "Learn how to add different types of content and structure interactive forms.",
-       isLocked: true,
+       
     topics: [
       "Links and navigation",
       "Images and multimedia",
@@ -45,6 +46,7 @@ const weeks = [
       "Forms and input elements",
       "Semantic HTML",
     ],
+    isLocked: true,
     material:
       "Explore HTML elements used to structure content, navigate between pages and collect information.",
     resources: [
@@ -61,7 +63,7 @@ const weeks = [
     title: "CSS Fundamentals",
     description:
       "Learn how to style HTML elements and control the appearance of a website.",
-       isLocked: true,
+       
     topics: [
       "Introduction to CSS",
       "Inline, internal and external CSS",
@@ -71,6 +73,7 @@ const weeks = [
       "Margins, padding and borders",
       "CSS box model",
     ],
+    isLocked: true,
     material:
       "Understand how CSS works and how to apply styling to HTML elements.",
     resources: [
@@ -86,7 +89,7 @@ const weeks = [
     title: "CSS Layouts",
     description:
       "Learn how to organise webpage content and create structured layouts.",
-       isLocked: true,
+       
     topics: [
       "CSS display properties",
       "CSS positioning",
@@ -95,6 +98,7 @@ const weeks = [
       "Alignment and spacing",
       "Creating navigation bars",
     ],
+    isLocked: true,
     material:
       "Learn how to position elements and create organised website layouts.",
     resources: [
@@ -110,7 +114,7 @@ const weeks = [
     title: "Responsive Web Design",
     description:
       "Make websites look good and function properly on different screen sizes.",
-       isLocked: true,
+       
     topics: [
       "Introduction to responsive design",
       "Media queries",
@@ -120,6 +124,7 @@ const weeks = [
       "Responsive navigation",
       "CSS transitions and hover effects",
     ],
+    isLocked: true,
     material:
       "Understand how to adapt website layouts to mobile phones, tablets and desktop screens.",
     resources: [
@@ -135,7 +140,7 @@ const weeks = [
     title: "JavaScript Fundamentals",
     description:
       "Understand programming concepts and learn how to introduce logic into websites.",
-       isLocked: true,
+       
     topics: [
       "Introduction to JavaScript",
       "Variables: let, const and var",
@@ -145,6 +150,7 @@ const weeks = [
       "Functions",
       "Basic loops",
     ],
+    isLocked: true,
     material:
       "Learn the basic building blocks of JavaScript programming and how to write simple programs.",
     resources: [
@@ -161,7 +167,7 @@ const weeks = [
     title: "JavaScript Data and DOM",
     description:
       "Learn how to work with collections of information and interact with webpage elements.",
-       isLocked: true,
+       
     topics: [
       "Arrays",
       "Objects",
@@ -171,6 +177,7 @@ const weeks = [
       "Changing HTML content",
       "Changing element styles",
     ],
+    isLocked: true,
     material:
       "Explore how JavaScript stores information and interacts with HTML elements through the DOM.",
     resources: [
@@ -187,7 +194,7 @@ const weeks = [
     title: "JavaScript Events and Final Project",
     description:
       "Bring your HTML, CSS and JavaScript knowledge together to build an interactive website.",
-       isLocked: true,
+       
     topics: [
       "Introduction to events",
       "Event listeners",
@@ -197,6 +204,7 @@ const weeks = [
       "Basic debugging",
       "Final project development",
     ],
+    isLocked: true,
     material:
       "Learn how to respond to user actions and combine everything you have learned into a working website.",
     resources: [
